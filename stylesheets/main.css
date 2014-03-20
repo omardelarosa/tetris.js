@@ -1,0 +1,25 @@
+#main-container {
+
+}
+
+.row {
+  width: 80%;
+  height: 6%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.cell {
+  display: inline-block;
+  background-color: yellow;
+  width: 2%;
+  margin: 0 1 0 1;
+  padding: 0;
+  border: 1px solid black;
+}
+
+.filled {
+  background-color: red;
+}
+
