@@ -285,6 +285,7 @@ Board.prototype.stampAndMakeNewShape = function(){
   var futurePositions = this.currentShape.previewMove(self, {y: 0, x: this.width/2})
   if ( !this.isValidPosition({}, futurePositions) ) {
     // console.log("invalid future position!")
+    // debugger
     console.log("you lose!")
     this.resetGame()
   }
@@ -352,8 +353,9 @@ Board.prototype.move = function(ev){
       this.renderShape(this.currentShape.name, this.currentRotationIndex, "stamp")
       this.updateBoard()
       this.stampAndMakeNewShape()
-      this.updateBoard()
+      // this.updateBoard()
     } else {
+      // debugger
       console.log("you lose!")
       this.resetGame()
     }
@@ -383,7 +385,8 @@ Board.prototype.changeCurrentPostion = function(newPosition, mode){
     this.matrix[newPosition.y][newPosition.x] = 1
     
   } else {
-    // console.log("blocked!")
+    console.log("blocked!")
+    // debugger
   }
   
   self.renderShape()
@@ -476,10 +479,14 @@ Board.prototype.isValidPosition = function(newPosition, positionsArray){
   var self = this
   // if (newPosition && newPosition.y == 0) debugger
   if (!positionsArray) {
+    // check to see if located above 0th row
+    if (newPosition.y < 0 ) {
+      return false
+    }
             //validates that new position is within board 
     return newPosition.y < this.height &&
-            // checking for negative rows causes issues with certain shapes
-           // newPosition.y >= 0 && 
+            // clearance of 5 non-existant squares fixes issues with certain longer shapes
+           newPosition.y >= -3 && 
            newPosition.x < this.width && 
            newPosition.x >= 0 &&
            (this.matrix[newPosition.y] ? (this.matrix[newPosition.y][newPosition.x] !== 3) : false )
