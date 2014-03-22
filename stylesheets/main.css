@@ -1,21 +1,40 @@
+/*
+YUI 3.15.0 (build 834026e)
+Copyright 2014 Yahoo! Inc. All rights reserved.
+Licensed under the BSD License.
+http://yuilibrary.com/license/
+*/
+
+html{color:#000;background:#FFF}body,div,dl,dt,dd,ul,ol,li,h1,h2,h3,h4,h5,h6,pre,code,form,fieldset,legend,input,textarea,p,blockquote,th,td{margin:0;padding:0}table{border-collapse:collapse;border-spacing:0}fieldset,img{border:0}address,caption,cite,code,dfn,em,strong,th,var{font-style:normal;font-weight:normal}ol,ul{list-style:none}caption,th{text-align:left}h1,h2,h3,h4,h5,h6{font-size:100%;font-weight:normal}q:before,q:after{content:''}abbr,acronym{border:0;font-variant:normal}sup{vertical-align:text-top}sub{vertical-align:text-bottom}input,textarea,select{font-family:inherit;font-size:inherit;font-weight:inherit;*font-size:100%}legend{color:#000}#yui3-css-stamp.cssreset{display:none}
 html, body {
   margin: 0;
   padding: 0;
   background-color: black;
+  border: none;
 }
 
 #main-heading {
   position: absolute;
   left: 70%;
-  font-size: 3.5em;
   width: 30%;
   height: 20%;
   color: white;
-  margin: 0;
+  margin: 2% 0 0 0;
   padding: 0;
   background-color: none;
+}
+
+#main-heading h1 {
   font-weight: bold;
   font-family: 'Helvetica';
+  font-size: 3.4em;
+}
+
+#main-heading h2 {
+  font-weight: normal;
+  font-style: italic;
+  font-family: 'Helvetica';
+  font-size: 2.0em;
 }
 
 #main-container {
@@ -30,8 +49,8 @@ html, body {
 
 .row {
   width: 100%;
-  height: 3.023%;
-  min-height: 3.023%;
+  height: 3.127%;
+  min-height: 3.127%;
   margin: 0;
   padding: 0;
   border: 0;
@@ -41,12 +60,11 @@ html, body {
   display: inline-block;
   background-color: none;
   height: 100%;
-  width: 1.75%;
-  min-width: 1.75 %;
+  width: 1.755%;
+  min-width: 1.755%;
   /* adjusted for border */
-  margin: 0 -2 0 0;
+  margin: 0 0 0 0;
   padding: 0;
-  border: 1px solid none;
 }
 
 .filled {
