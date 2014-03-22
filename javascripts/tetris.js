@@ -4,14 +4,14 @@ var Board = function(options) {
   var options = options || {}
   var self = this
 
-  this.columns = options.columns || 30
-  this.rows = options.rows || 15
+  this.columns = options.columns || Math.floor(window.innerWidth/22.25)
+  this.rows = options.rows || Math.floor(window.innerHeight/19.5)
   this.refreshRate = options.refreshRate || 100
 
   this.currentPosition = {
     row: 0,
     // start mid-board
-    col: this.columns/2
+    col: Math.floor(this.columns/2)
   }
 
   // set to random starting shape

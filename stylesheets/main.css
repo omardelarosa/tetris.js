@@ -1,11 +1,37 @@
-#main-container {
+html, body {
+  margin: 0;
+  padding: 0;
+  background-color: black;
+}
 
+#main-heading {
+  position: absolute;
+  left: 70%;
+  font-size: 3.5em;
+  width: 30%;
+  height: 20%;
+  color: white;
+  margin: 0;
+  padding: 0;
+  background-color: none;
+  font-weight: bold;
+  font-family: 'Helvetica';
+}
+
+#main-container {
+  margin: 0;
+  padding: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
 }
 
 .row {
-  width: 80%;
-  height: 20;
-  min-height: 20px;
+  width: 100%;
+  height: 3.023%;
+  min-height: 3.023%;
   margin: 0;
   padding: 0;
   border: 0;
@@ -13,15 +39,23 @@
 
 .cell {
   display: inline-block;
-  background-color: yellow;
+  background-color: none;
   height: 100%;
-  width: 2%;
+  width: 1.75%;
+  min-width: 1.75 %;
   /* adjusted for border */
-  margin: 0 -1 0 0;
+  margin: 0 -2 0 0;
   padding: 0;
-  border: 1px solid black;
+  border: 1px solid none;
 }
 
 .filled {
   background-color: red;
+}
+
+@media (max-width: 800px) {
+  .row {
+    height: 1.5%;
+    min-height: 1.5%;
+  }
 }
