@@ -5,7 +5,11 @@ var Board = function(options) {
   var self = this
 
   // number of rows and columns (height, width)
-  this.sliceSize = Math.floor( 200*(80/document.body.clientWidth) ) || 1
+
+  this.deviceWidth = window.innerWidth
+  this.deviceHeight = window.innerHeight
+
+  this.sliceSize = Math.floor( 200*(80/this.deviceWidth) ) || 1
   if (this.sliceSize < 18)  { 
     this.sliceSize = 18 
   } else if (this.sliceSize > 25) {
@@ -13,8 +17,8 @@ var Board = function(options) {
   }
   // console.log("sliceSize", this.sliceSize)
 
-  this.width = options.width || Math.floor(document.body.clientWidth/this.sliceSize)
-  this.height = options.height || Math.floor(document.body.clientHeight/this.sliceSize)
+  this.width = options.width || Math.floor(this.deviceWidth/this.sliceSize)
+  this.height = options.height || Math.floor(this.deviceHeight/this.sliceSize)
   this.refreshRate = options.refreshRate || 300
   this.id = options.id || "main-container"
 
@@ -28,6 +32,70 @@ var Board = function(options) {
     "keyup": function(ev){
       self.actions.bind(self)
       return self.actions(ev)
+    },
+    "click": function(ev){
+      console.log("clicked!", ev)
+      if ( ev.target.classList.contains("filled") ) {
+        self.actions.bind(self)
+        return self.actions({
+            keyIdentifier: "Up",
+            preventDefault: function(){ return true }
+          })
+      }
+    },
+    "touchmove" : function(ev){
+      console.log(ev, "touch move!")
+    },
+    "touchstart" : function(ev){
+      self.lastTouchPosition = {
+        x: ev.changedTouches[0].clientX,
+        y: ev.changedTouches[0].clientY
+      }
+      // console.log(ev, "touch start!", self.lastTouchPosition)
+
+    },
+    "touchmove" : function(ev){
+      ev.preventDefault()
+      var currentTouchPosition = {
+        x: ev.changedTouches[0].clientX,
+        y: ev.changedTouches[0].clientY
+      }
+      var changeIn = function(pos1, pos2){
+        var change = {
+          x: pos2.x-pos1.x,
+          y: pos2.y-pos1.y
+        }
+        if (Math.abs(change.x) < 100 && change.y > 0) {
+          // down
+          console.log("moving down!")
+          self.move({
+            keyIdentifier: "Down",
+            preventDefault: function(){ return true }
+          })
+        } else if (Math.abs(change.x) == 0 && change.y < 0) {
+          console.log("moving up!")
+          self.actions({
+            keyIdentifier: "Up",
+            preventDefault: function(){ return true }
+          })
+        } else if ( change.x < 0) {
+          console.log("moving left!")
+          self.move({
+            keyIdentifier: "Left",
+            preventDefault: function(){ return true }
+          })
+        } else if ( change.x > 0 ) {
+          console.log("moving right!")
+          self.move({
+            keyIdentifier: "Right",
+            preventDefault: function(){ return true }
+          })
+
+        }
+        return change
+      }
+      // console.log(ev, "touch move", currentTouchPosition, self.lastTouchPosition)
+      console.log("change", changeIn(self.lastTouchPosition, currentTouchPosition))
     }
   }
 
@@ -46,7 +114,7 @@ var Board = function(options) {
       "width: ", self.sliceSize, ";",
     "}",
     "#main-container {",
-      "width: ", document.body.clientWidth+"px",
+      "width: ", self.deviceWidth+"px",
     "}"
   ].join("")
 
@@ -515,6 +583,12 @@ Board.prototype.bindEvents = function(){
   // set keybindings
   document.addEventListener("keydown", this.events.keydown )
   document.addEventListener("keyup", this.events.keyup )
+
+  document.addEventListener("click", this.events.click)
+
+  document.addEventListener("touchstart", this.events.touchstart)
+  document.addEventListener("touchmove", this.events.touchmove)
+  // document.addEventListener("touchmove", this.events.touchmove)
 
 }
 

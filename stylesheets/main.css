@@ -6,22 +6,23 @@ http://yuilibrary.com/license/
 */
 
 html{color:#000;background:#FFF}body,div,dl,dt,dd,ul,ol,li,h1,h2,h3,h4,h5,h6,pre,code,form,fieldset,legend,input,textarea,p,blockquote,th,td{margin:0;padding:0}table{border-collapse:collapse;border-spacing:0}fieldset,img{border:0}address,caption,cite,code,dfn,em,strong,th,var{font-style:normal;font-weight:normal}ol,ul{list-style:none}caption,th{text-align:left}h1,h2,h3,h4,h5,h6{font-size:100%;font-weight:normal}q:before,q:after{content:''}abbr,acronym{border:0;font-variant:normal}sup{vertical-align:text-top}sub{vertical-align:text-bottom}input,textarea,select{font-family:inherit;font-size:inherit;font-weight:inherit;*font-size:100%}legend{color:#000}#yui3-css-stamp.cssreset{display:none}
-html, body {
-  margin: 0;
-  padding: 0;
+body {
   background-color: black;
-  border: none;
 }
 
 .cleared {
   background-color: green;
 }
 
+.white {
+  background-color: white;
+}
+
 #main-heading {
   position: absolute;
   z-index: 1;
   display: inline-block;
-  float: right;
+  /*float: right;*/
   /*left: 70%;*/
   width: 100%;
   height: 20%;
@@ -33,7 +34,7 @@ html, body {
 
 #main-heading h1 {
   float: right;
-  display: inline-block;
+  /*display: inline-block;*/
   font-weight: bold;
   font-family: 'Helvetica';
   font-size: 3.4em;
@@ -41,7 +42,7 @@ html, body {
 
 #main-heading h2 {
   float: right;
-  display: inline-block;
+  /*display: inline-block;*/
   font-weight: normal;
   font-style: italic;
   font-family: 'Helvetica';
@@ -53,7 +54,7 @@ html, body {
   display: inline-block;
   margin: 0;
   padding: 0;
-  position: absolute;
+  /*position: absolute;*/
   top: 0;
   left: 0;
   width: 100%;
@@ -88,11 +89,4 @@ html, body {
 
 .filled {
   background-color: red;
-}
-
-@media (max-width: 800px) {
- /* .row {
-    height: 1.5%;
-    min-height: 1.5%;
-  }*/
 }
