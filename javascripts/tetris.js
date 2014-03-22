@@ -9,9 +9,22 @@ var Board = function(options) {
   console.log("sliceSize", this.sliceSize)
 
   this.width = options.width || Math.floor(document.body.clientWidth/this.sliceSize)
-  this.height = options.height || Math.floor(document.body.clientHeight/this.sliceSize)
+  this.height = options.height || Math.floor(document.body.clientHeight/this.sliceSize)-2
   this.refreshRate = options.refreshRate || 100
   this.id = options.id || "main-container"
+
+  // events
+
+  this.events = {
+    "keydown": function(ev){
+      self.move.bind(self)
+      return self.move(ev)
+    },
+    "keyup": function(ev){
+      self.actions.bind(self)
+      return self.actions(ev)
+    }
+  }
 
   this.activeCells = []
 
@@ -37,14 +50,17 @@ var Board = function(options) {
   }
 
   // clear Timers if any
-  this.stopAllIntervals()
+  this.stopGame()
 
+  // this.currentRowIndex = 0
 
   this.currentPosition = {
     y: 0,
     // start mid-board
     x: Math.floor(this.width/2)
   }
+
+
 
   // set to random starting shape
   self.currentShape = new Shape()
@@ -95,30 +111,37 @@ Board.prototype.toString = function(){
 Board.prototype.startGame = function(){
   var self = this
   self.game = setInterval(
-    (function(i){
+    (function(){
       // initialize i
-      var i = 0
-
+      self.currentRowIndex = 0
       // set start position
       self.changeCurrentPostion()
 
       return function() {
         // reset last row
-        
-        self.changeCurrentPostion({
-          y: self.currentPosition.y+1,
-          x: self.currentPosition.x
+
+        self.move({
+          keyIdentifier: "Down",
+          preventDefault: function(){ return true }
         })
 
-        if (i < self.height-1) {
-          i += 1
+        // self.changeCurrentPostion(nextPosition)
+
+        if (self.currentRowIndex < self.height-1) {
+          self.currentRowIndex += 1
         } else {
           // self.reset()
-          self.changeCurrentPostion({y: 0, x: self.currentPosition.x})
-          self.currentShape = new Shape()
-          self.renderShape(self.currentShape.name)
+          // stamp current position
+          // self.changeCurrentPostion(self.currentPosition, "stamp")
+
+          // self.changeCurrentPostion({y: 0, x: self.currentPosition.x}, "stamp")
+          // self.currentShape = new Shape()
+          // self.renderShape(self.currentShape.name)
+
+
+          self.stampAndMakeNewShape()
           // self.stopGame()
-          i = 0
+          // self.currentRowIndex = 0
         }
         
       }
@@ -127,6 +150,21 @@ Board.prototype.startGame = function(){
   )
 
   return self.game
+}
+
+Board.prototype.currentPositions = function(){
+  var self = this
+  var positions = []
+
+  positions.push(this.currentPosition)
+
+  this.currentShape.rotations[this.currentRotationIndex].forEach(function(rotationMod){
+    positions.push({
+      x: self.currentPosition.x+rotationMod.x,
+      y: self.currentPosition.y+rotationMod.y
+    })
+  })
+  return positions
 }
 
 Board.prototype.buildGrid = function(){
@@ -170,6 +208,7 @@ Board.prototype.updateBoard = function(){
 
   while (self.activeCells.length > 0) {
     var oldCell = self.activeCells.pop()
+    // comment this out for cool trails effect
     oldCell.classList.remove("filled")
   }
 
@@ -191,12 +230,20 @@ Board.prototype.updateBoard = function(){
   })
 }
 
-Board.prototype.stopRefresh = function(){
-  clearInterval(this.refresh)
-}
-
 Board.prototype.stopGame = function(){
   clearInterval(this.game)
+  clearInterval(this.refresh)
+  this.unbindEvents()
+}
+
+Board.prototype.resetGame = function(){
+
+  this.stopGame()
+
+  setTimeout(function(){
+    window.b = new Board()
+  }, 1000)
+
 }
 
 Board.prototype.reset = function(){
@@ -205,9 +252,9 @@ Board.prototype.reset = function(){
   var self = this
   self.matrix.forEach(function(value, y){
     self.matrix[y].forEach(function(value, x){
-      if (self.matrix[y][x] !== 3 ) {
+      // if (self.matrix[y][x] !== 3 ) {
         self.matrix[y][x] = 0
-      }
+      // }
     })
   })
 }
@@ -237,6 +284,16 @@ Board.prototype.actions = function(ev){
   return false
 }
 
+Board.prototype.stampAndMakeNewShape = function(){
+
+  this.changeCurrentPostion({y: 0, x: this.currentPosition.x}, "stamp")
+  this.currentShape = new Shape()
+  this.renderShape(this.currentShape.name)
+
+  this.currentRowIndex = 0
+
+}
+
 Board.prototype.move = function(ev){
   
   var direction = ev.keyIdentifier
@@ -257,34 +314,59 @@ Board.prototype.move = function(ev){
   }
 
   // TODO: figure out way preview future positions without doing this
-  if (newPosition && this.isValidPosition({}, this.currentShape.previewMove(this, newPosition) )) {
+  if (newPosition && this.isValidPosition({}, this.currentShape.previewMove(this, newPosition)) ) {
+    // console.log("old positions", this.currentPositions() )
     this.changeCurrentPostion(newPosition)
     this.updateBoard()
-  }
+
+    // console.log("new postions", this.currentPositions() )
+  } else if (direction == "Down" && !this.isValidPosition({}, this.currentShape.previewMove(this, newPosition)) ) {
   // this.setCurrentPostion()
+    // console.log("invalid down!", this.currentRowIndex)
+    // this.stampAndMakeNewShape()
+    if (this.currentRowIndex !== 1 ) {
+      this.renderShape(this.currentShape.name, this.currentRotationIndex, "stamp")
+      this.stampAndMakeNewShape()
+      this.updateBoard()
+    } else {
+      console.log("you lose!")
+      this.resetGame()
+    }
+    
+  }
   return false
 
 }
 
-Board.prototype.changeCurrentPostion = function(newPosition){
+Board.prototype.changeCurrentPostion = function(newPosition, mode){
   var self = this
-  this.reset()
+  // this.reset()
+
+  var mode = mode || "default"
 
   if (newPosition !== undefined && self.isValidPosition(newPosition) ) {
-    this.matrix[this.currentPosition.y][this.currentPosition.x] = 0
+    if (mode === "stamp") {
+      // debugger
+      this.matrix[this.currentPosition.y][this.currentPosition.x] = 3
+    } else {
+      this.matrix[this.currentPosition.y][this.currentPosition.x] = 0
+    }
     this.currentPosition = newPosition
     this.matrix[newPosition.y][newPosition.x] = 1
-    self.renderShape()
-  } 
-
-
+    
+  } else {
+    console.log("blocked!")
+  }
+  self.renderShape()
+  this.updateBoard()
   
 
 }
 
 
-Board.prototype.renderShape = function(name, rotationIndex){
+Board.prototype.renderShape = function(name, rotationIndex, mode){
   var self = this
+  var mode = mode || "default"
   
   var shapeName = name || self.currentShape.name
   var rotationIndex = rotationIndex || self.currentRotationIndex || 0
@@ -303,7 +385,17 @@ Board.prototype.renderShape = function(name, rotationIndex){
     var newPieceY = self.currentPosition.y+piece.y
     var newPieceX = self.currentPosition.x+piece.x
     if ( self.matrix[newPieceY] && self.isValidPosition({y: newPieceY, x: newPieceX})) {
-      self.matrix[newPieceY][newPieceX] = 1
+      if (mode === "stamp") {
+        // debugger
+        // self.matrix[self.currentPosition.y][self.currentPosition.x] = 3
+        self.matrix[newPieceY][newPieceX] = 3
+        document.getElementsByClassName('cell '+newPieceY+'_'+newPieceX)[0].classList.add("filled")
+        // stamp center
+        self.matrix[self.currentPosition.y][self.currentPosition.x] = 3
+        document.getElementsByClassName('cell '+self.currentPosition.y+'_'+self.currentPosition.x)[0].classList.add("filled")
+      } else {
+        self.matrix[newPieceY][newPieceX] = 1
+      }
     } else {
       // handle case of piece not fitting the dimensions of the space here
 
@@ -314,21 +406,6 @@ Board.prototype.renderShape = function(name, rotationIndex){
   })
 }
 
-Board.prototype.stampShape = function(){
-
-  // TODO: Make this work
-
-  var self = this
-
-  Shape.prototype.shapes[self.currentShape.name][self.currentRotationIndex].forEach(function(shape){
-    debugger
-    self.matrix[self.currentPosition.y+shape.y][self.currentPosition.x+shape.x] = 3
-    console.log("stamped!")
-
-  })
-
-}
-
 // Board EVENTS
 
 Board.prototype.bindEvents = function(){
@@ -336,15 +413,14 @@ Board.prototype.bindEvents = function(){
   var self = this;
 
   // set keybindings
-  document.addEventListener("keydown", this.move.bind(self) )
-
-  document.addEventListener("keyup", this.actions.bind(self) )
+  document.addEventListener("keydown", this.events.keydown )
+  document.addEventListener("keyup", this.events.keyup )
 
 }
 
-Board.prototype.stopAllIntervals = function(){
-  this.stopGame()
-  this.stopRefresh()
+Board.prototype.unbindEvents = function(){
+  document.removeEventListener("keydown", this.events.keydown, false)
+  document.removeEventListener("keyup", this.events.keyup, false)
 }
 
 
