@@ -19,9 +19,11 @@ html, body {
 
 #main-heading {
   position: absolute;
+  z-index: 1;
   display: inline-block;
-  left: 70%;
-  width: 30%;
+  float: right;
+  /*left: 70%;*/
+  width: 100%;
   height: 20%;
   color: white;
   margin: 2% 0 0 0;
@@ -30,14 +32,16 @@ html, body {
 }
 
 #main-heading h1 {
-  /*display: inline-block;*/
+  float: right;
+  display: inline-block;
   font-weight: bold;
   font-family: 'Helvetica';
   font-size: 3.4em;
 }
 
 #main-heading h2 {
-/*  display: inline-block;*/
+  float: right;
+  display: inline-block;
   font-weight: normal;
   font-style: italic;
   font-family: 'Helvetica';
@@ -45,6 +49,7 @@ html, body {
 }
 
 #main-container {
+  z-index: 0;
   display: inline-block;
   margin: 0;
   padding: 0;
@@ -56,7 +61,8 @@ html, body {
 }
 
 #grid {
-  
+  /*border: 1px solid black;*/
+  /*width: 100%;*/
 }
 
 .row {

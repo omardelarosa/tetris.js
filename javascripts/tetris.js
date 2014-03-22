@@ -8,14 +8,14 @@ var Board = function(options) {
   this.sliceSize = Math.floor( 200*(80/document.body.clientWidth) ) || 1
   if (this.sliceSize < 18)  { 
     this.sliceSize = 18 
-  } else if (this.sliceSize > 30) {
-    this.sliceSize = 30
+  } else if (this.sliceSize > 25) {
+    this.sliceSize = 25
   }
   // console.log("sliceSize", this.sliceSize)
 
   this.width = options.width || Math.floor(document.body.clientWidth/this.sliceSize)
   this.height = options.height || Math.floor(document.body.clientHeight/this.sliceSize)
-  this.refreshRate = options.refreshRate || 100
+  this.refreshRate = options.refreshRate || 300
   this.id = options.id || "main-container"
 
   // events
@@ -31,6 +31,8 @@ var Board = function(options) {
     }
   }
 
+  this.errorCounter = 0
+
   this.activeCells = []
 
   var dynamicStyle = document.createElement('style')
@@ -42,6 +44,9 @@ var Board = function(options) {
     "}",
     ".cell {",
       "width: ", self.sliceSize, ";",
+    "}",
+    "#main-container {",
+      "width: ", document.body.clientWidth+"px",
     "}"
   ].join("")
 
@@ -183,6 +188,7 @@ Board.prototype.buildGrid = function(){
     
     var row = document.createElement('div')
     row.classList.add('row')
+    row.classList.add('r'+rowIdx)
     self.matrix[rowIdx].forEach(function(value, colIdx){
 
       var cell = document.createElement('span')
@@ -233,6 +239,7 @@ Board.prototype.updateBoard = function(){
     })
 
   })
+
 }
 
 Board.prototype.removeTrails = function(){
@@ -277,26 +284,54 @@ Board.prototype.reset = function(){
   })
 }
 
+Board.prototype.clearRow = function(rowNum){
+  var self = this
+  // debugger
+  this.matrix[rowNum-1].forEach(function(column, colIdx){
+    // column.forEach(function(cell){
+      self.matrix[rowNum-1][colIdx] = 0
+
+      // clear lingering player position
+      setTimeout(function(){
+        self.matrix[rowNum-1][colIdx] = 0
+      }, 500)
+    // })
+  })
+}
+
 Board.prototype.stampAndMakeNewShape = function(){
 
   var self = this
 
   // validate future position
-  var futurePositions = this.currentShape.previewMove(self, {y: 0, x: this.width/2})
+  var futurePositions = this.currentShape.previewMove(self, {y: 0, x: parseInt(this.width/2)})
   if ( !this.isValidPosition({}, futurePositions) ) {
     // console.log("invalid future position!")
     // debugger
-    console.log("you lose!")
-    this.resetGame()
+    // console.log("you lose!")
+    if (this.errorCounter > 3) {
+      console.log("you lose!")
+      this.resetGame()
+    } else {
+      console.log("invalid future position!")
+      // debugger
+      // this.clearRow(1)
+      this.errorCounter += 1
+    }
+    
+    // this.resetGame()
   }
 
-  this.changeCurrentPostion({y: 0, x: this.width/2}, "stamp")
+  // check for Tetris?
+  this.checkForTetris()
+
+  this.changeCurrentPostion({y: 0, x: parseInt(this.width/2)}, "stamp")
   this.removeTrails()
   this.currentShape = new Shape()
   this.renderShape(this.currentShape.name)
   this.currentRowIndex = 0
 
-
+  
 
 }
 
@@ -308,7 +343,7 @@ Board.prototype.actions = function(ev){
       // . key
       // rotate right
       ev.preventDefault()
-      // if ( !(newPosition && this.isValidPosition({}, this.currentShape.previewMove(this, newPosition))) ) break
+      // TODO: fix wall stopping bug
       this.removeTrails()
       this.currentRotationIndex += 1
       this.renderShape(this.currentShape.name, this.currentRotationIndex)
@@ -385,7 +420,7 @@ Board.prototype.changeCurrentPostion = function(newPosition, mode){
     this.matrix[newPosition.y][newPosition.x] = 1
     
   } else {
-    console.log("blocked!")
+    // console.log("blocked!")
     // debugger
   }
   
@@ -440,9 +475,9 @@ Board.prototype.renderShape = function(name, rotationIndex, mode){
 Board.prototype.checkForTetris = function(){
   var self = this
   var winningSum = this.width*3
-  console.log(winningSum, "winningSum")
+  // console.log(winningSum, "winningSum")
   var currentHighestSum = 0
-  this.matrix.forEach(function(rowArray){
+  this.matrix.forEach(function(rowArray, rowIdx){
     var rowSum = 0
     rowArray.forEach(function(cell){
       // console.log("rowSum", rowSum, cell)
@@ -450,11 +485,25 @@ Board.prototype.checkForTetris = function(){
       rowSum += parseInt(cell)
       // console.log("rowSum", rowSum)
     })
-    if (rowSum > currentHighestSum) {
-      currentHighestSum = rowSum
+    if (rowSum === winningSum) {
+      var maxRow = document.getElementsByClassName('r'+(rowIdx) )[0]
+      if (maxRow)  {
+        maxRow.classList.add('cleared')
+        _.each( maxRow.childNodes, function(cell) {
+          if (cell) cell.classList.remove("filled")
+            self.clearRow(rowIdx+1)
+        })
+        setTimeout(function(){
+          maxRow.classList.remove('cleared')
+        },500)
+        console.log("cleared", rowSum, rowIdx )
+        console.log(self.matrix[rowIdx])
+      }
+      // currentHighestSum = rowSum
     }
   })
-  console.log(currentHighestSum, "currentHighestSum")
+  // console.log(currentHighestSum, "currentHighestSum")
+  rowSum = 0
 }
 
 // Board EVENTS
@@ -480,7 +529,9 @@ Board.prototype.isValidPosition = function(newPosition, positionsArray){
   // if (newPosition && newPosition.y == 0) debugger
   if (!positionsArray) {
     // check to see if located above 0th row
-    if (newPosition.y < 0 ) {
+    if (newPosition.y < 0 && newPosition.y >= -3) {
+      return true
+    } else if (newPosition.y < -3) {
       return false
     }
             //validates that new position is within board 
