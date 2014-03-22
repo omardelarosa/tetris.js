@@ -13,8 +13,8 @@ html, body {
   border: none;
 }
 
-.stamped {
-  background-color: red;
+.cleared {
+  background-color: green;
 }
 
 #main-heading {

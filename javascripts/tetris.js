@@ -6,10 +6,15 @@ var Board = function(options) {
 
   // number of rows and columns (height, width)
   this.sliceSize = Math.floor( 200*(80/document.body.clientWidth) ) || 1
-  console.log("sliceSize", this.sliceSize)
+  if (this.sliceSize < 18)  { 
+    this.sliceSize = 18 
+  } else if (this.sliceSize > 30) {
+    this.sliceSize = 30
+  }
+  // console.log("sliceSize", this.sliceSize)
 
   this.width = options.width || Math.floor(document.body.clientWidth/this.sliceSize)
-  this.height = options.height || Math.floor(document.body.clientHeight/this.sliceSize)-2
+  this.height = options.height || Math.floor(document.body.clientHeight/this.sliceSize)
   this.refreshRate = options.refreshRate || 100
   this.id = options.id || "main-container"
 
@@ -72,7 +77,7 @@ var Board = function(options) {
   for (var row = 0; row < this.height; row += 1) {
     this.matrix.push([])
     for (var col = 0; col < this.width; col += 1) {
-      this.matrix[row].push([0])
+      this.matrix[row].push(0)
     }
   }
 
@@ -230,6 +235,19 @@ Board.prototype.updateBoard = function(){
   })
 }
 
+Board.prototype.removeTrails = function(){
+
+  var self = this
+
+  self.currentPositions().forEach(function(position){
+    var cell = document.getElementsByClassName("cell "+position.y+"_"+position.x)[0]
+    // console.log(cell, "cell!")
+    if (cell) cell.classList.remove("filled")
+    if (self.matrix[position.y]) self.matrix[position.y][position.x] = 0
+  })
+
+}
+
 Board.prototype.stopGame = function(){
   clearInterval(this.game)
   clearInterval(this.refresh)
@@ -259,6 +277,28 @@ Board.prototype.reset = function(){
   })
 }
 
+Board.prototype.stampAndMakeNewShape = function(){
+
+  var self = this
+
+  // validate future position
+  var futurePositions = this.currentShape.previewMove(self, {y: 0, x: this.width/2})
+  if ( !this.isValidPosition({}, futurePositions) ) {
+    // console.log("invalid future position!")
+    console.log("you lose!")
+    this.resetGame()
+  }
+
+  this.changeCurrentPostion({y: 0, x: this.width/2}, "stamp")
+  this.removeTrails()
+  this.currentShape = new Shape()
+  this.renderShape(this.currentShape.name)
+  this.currentRowIndex = 0
+
+
+
+}
+
 Board.prototype.actions = function(ev){
   var direction = ev.keyIdentifier
   // console.log("key", keyName, ev)
@@ -267,31 +307,13 @@ Board.prototype.actions = function(ev){
       // . key
       // rotate right
       ev.preventDefault()
+      // if ( !(newPosition && this.isValidPosition({}, this.currentShape.previewMove(this, newPosition))) ) break
+      this.removeTrails()
       this.currentRotationIndex += 1
       this.renderShape(this.currentShape.name, this.currentRotationIndex)
       break
-    // case 188:
-    //   // , key
-    //   // rotate left
-    //   ev.preventDefault()
-    //   // TODO: fix this, doesn't seem to work
-    //   this.currentRotationIndex -= 1
-    //   // quick fix
-    //   if (this.currentRotationIndex < 0 ) this.currentRotationIndex = Math.abs(this.currentRotationIndex) 
-    //   this.renderShape(this.currentShape.name, this.currentRotationIndex)
-    //   break
   } 
   return false
-}
-
-Board.prototype.stampAndMakeNewShape = function(){
-
-  this.changeCurrentPostion({y: 0, x: this.currentPosition.x}, "stamp")
-  this.currentShape = new Shape()
-  this.renderShape(this.currentShape.name)
-
-  this.currentRowIndex = 0
-
 }
 
 Board.prototype.move = function(ev){
@@ -316,6 +338,7 @@ Board.prototype.move = function(ev){
   // TODO: figure out way preview future positions without doing this
   if (newPosition && this.isValidPosition({}, this.currentShape.previewMove(this, newPosition)) ) {
     // console.log("old positions", this.currentPositions() )
+    this.removeTrails()
     this.changeCurrentPostion(newPosition)
     this.updateBoard()
 
@@ -324,8 +347,10 @@ Board.prototype.move = function(ev){
   // this.setCurrentPostion()
     // console.log("invalid down!", this.currentRowIndex)
     // this.stampAndMakeNewShape()
-    if (this.currentRowIndex !== 1 ) {
+    if (this.currentRowIndex !== 0 ) {
+      // this.removeTrails()
       this.renderShape(this.currentShape.name, this.currentRotationIndex, "stamp")
+      this.updateBoard()
       this.stampAndMakeNewShape()
       this.updateBoard()
     } else {
@@ -342,6 +367,8 @@ Board.prototype.changeCurrentPostion = function(newPosition, mode){
   var self = this
   // this.reset()
 
+  // console.log("currentPosition x:", self.currentPosition.x, " y:", self.currentPosition.y)
+  // if (newPosition) console.log("newPosition x:", newPosition.x, " y:", newPosition.y)
   var mode = mode || "default"
 
   if (newPosition !== undefined && self.isValidPosition(newPosition) ) {
@@ -351,18 +378,19 @@ Board.prototype.changeCurrentPostion = function(newPosition, mode){
     } else {
       this.matrix[this.currentPosition.y][this.currentPosition.x] = 0
     }
+    // this.removeTrails()
     this.currentPosition = newPosition
     this.matrix[newPosition.y][newPosition.x] = 1
     
   } else {
-    console.log("blocked!")
+    // console.log("blocked!")
   }
+  
   self.renderShape()
   this.updateBoard()
   
 
 }
-
 
 Board.prototype.renderShape = function(name, rotationIndex, mode){
   var self = this
@@ -406,6 +434,26 @@ Board.prototype.renderShape = function(name, rotationIndex, mode){
   })
 }
 
+Board.prototype.checkForTetris = function(){
+  var self = this
+  var winningSum = this.width*3
+  console.log(winningSum, "winningSum")
+  var currentHighestSum = 0
+  this.matrix.forEach(function(rowArray){
+    var rowSum = 0
+    rowArray.forEach(function(cell){
+      // console.log("rowSum", rowSum, cell)
+
+      rowSum += parseInt(cell)
+      // console.log("rowSum", rowSum)
+    })
+    if (rowSum > currentHighestSum) {
+      currentHighestSum = rowSum
+    }
+  })
+  console.log(currentHighestSum, "currentHighestSum")
+}
+
 // Board EVENTS
 
 Board.prototype.bindEvents = function(){
@@ -426,13 +474,15 @@ Board.prototype.unbindEvents = function(){
 
 Board.prototype.isValidPosition = function(newPosition, positionsArray){
   var self = this
+  // if (newPosition && newPosition.y == 0) debugger
   if (!positionsArray) {
             //validates that new position is within board 
     return newPosition.y < this.height &&
-           newPosition.y >= 0 && 
+            // checking for negative rows causes issues with certain shapes
+           // newPosition.y >= 0 && 
            newPosition.x < this.width && 
            newPosition.x >= 0 &&
-           this.matrix[newPosition.y][newPosition.x] !== 3
+           (this.matrix[newPosition.y] ? (this.matrix[newPosition.y][newPosition.x] !== 3) : false )
   } else {
     // debugger 
     var result = true
@@ -462,9 +512,13 @@ Shape.prototype.isValidMove = function(board){
   var rotation = this.rotations[board.currentRotationIndex] 
   
   rotation.forEach(function(positionModifier){
-    if (!board.isValidPosition({
+    var newPosition = {
       x: board.currentPosition.x+positionModifier.x,
       y: board.currentPosition.y+positionModifier.y
+    }
+    if (!board.isValidPosition({
+      x: newPosition.x,
+      y: newPosition.y
     })) {
       result = false
     }
@@ -475,6 +529,7 @@ Shape.prototype.isValidMove = function(board){
 
 Shape.prototype.previewMove = function(board, destinationPosition){
   // returns an array of points that would be made in a move
+  // debugger
   var currentRotationModifiers = this.rotations[board.currentRotationIndex]
   var futureOccupiedPositions = []
   currentRotationModifiers.forEach(function(modifiers){
@@ -497,7 +552,36 @@ Shape.prototype.shapes = {
     //     {x: 0, y: 0}
     //   ]
     // ]
-
+    pGram1: [
+      // first rotation
+      [
+        {x: 0, y: 0},
+        {x: 1, y: 0},
+        {x: 1, y: 1},
+        {x: 2, y: 1}
+      ],
+      // second rotation
+      [
+        {x: 0, y: 0},
+        {x: 0, y: -1},
+        {x: 1, y: -1},
+        {x: 1, y: -2}
+      ],
+      // third rotation
+      [
+        {x: 0, y: 0},
+        {x: -1, y: 0},
+        {x: -1, y: -1},
+        {x: -2, y: -1}
+      ],
+      // fourth rotation
+      [
+        {x: 0, y: 0},
+        {x: 0, y: -1},
+        {x: -1, y: -1},
+        {x: -1, y: -2}
+      ]
+    ],
     square: [
       // first rotation
       [
@@ -506,7 +590,6 @@ Shape.prototype.shapes = {
         {x: 1, y: 0},
         {x: 1, y: 1}
       ]
-      // second roation
     ],
     line: [
       // first rotation
@@ -522,6 +605,20 @@ Shape.prototype.shapes = {
         {y: 0, x: 1},
         {y: 0, x: 2},
         {y: 0, x: 3}
+      ],
+      // third rotation
+      [
+        {y: 0, x: 0},
+        {y: -1, x: 0},
+        {y: -2, x: 0},
+        {y: -3, x: 0}
+      ],
+      // fourth rotation
+      [
+        {y: 0, x: 0},
+        {y: 0, x: -1},
+        {y: 0, x: -2},
+        {y: 0, x: -3}
       ]
     ]
 }

@@ -22,13 +22,13 @@ $(function(){
 
   // test
 
-  b.matrix[20][1] = 3
-  b.matrix[20][2] = 3
-  b.matrix[20][3] = 3
-  b.matrix[20][4] = 3
-  b.matrix[20][5] = 3
-  b.matrix[20][6] = 3
+  // b.matrix[20][1] = 3
+  // b.matrix[20][2] = 3
+  // b.matrix[20][3] = 3
+  // b.matrix[20][4] = 3
+  // b.matrix[20][5] = 3
+  // b.matrix[20][6] = 3
 
-  document.getElementsByClassName('cell 20_6')[0].innerHTML = "<a href='http://google.com' target='_blank'>link</a>"
+  // document.getElementsByClassName('cell 20_6')[0].innerHTML = "<a href='http://google.com' target='_blank'>link</a>"
 
 })
