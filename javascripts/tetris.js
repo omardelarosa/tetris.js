@@ -4,10 +4,41 @@ var Board = function(options) {
   var options = options || {}
   var self = this
 
-  this.width = options.width || Math.floor(window.innerWidth/22.25)
-  this.height = options.height || Math.floor(window.innerHeight/19.5)
+  // number of rows and columns (height, width)
+  this.sliceSize = Math.floor( 200*(80/document.body.clientWidth) ) || 1
+  console.log("sliceSize", this.sliceSize)
+
+  this.width = options.width || Math.floor(document.body.clientWidth/this.sliceSize)
+  this.height = options.height || Math.floor(document.body.clientHeight/this.sliceSize)
   this.refreshRate = options.refreshRate || 100
   this.id = options.id || "main-container"
+
+  this.activeCells = []
+
+  var dynamicStyle = document.createElement('style')
+
+  // speed improvement over dynamically adding style
+  dynamicStyle.innerText = [
+    ".row {",
+      "height: ", self.sliceSize, ";",
+    "}",
+    ".cell {",
+      "width: ", self.sliceSize, ";",
+    "}"
+  ].join("")
+
+  document.head.appendChild(dynamicStyle)
+
+  this.el = document.getElementById(this.id)
+
+  // clear contents if any
+  while (this.el.firstChild) {
+    this.el.removeChild(this.el.firstChild)
+  }
+
+  // clear Timers if any
+  this.stopAllIntervals()
+
 
   this.currentPosition = {
     y: 0,
@@ -29,15 +60,19 @@ var Board = function(options) {
     }
   }
 
-  this.el = document.getElementById(this.id)
-  // this.el.id = 'grid'
-
+  
+  this.gridEl = document.createElement('div')
+  this.gridEl.id = "grid"
+  this.el.appendChild(this.gridEl)
   // document.getElementById('main-container').appendChild(this.el)
+
+  // creates DOM grid
+  this.buildGrid()
 
   // sets refresh logic
   this.refresh = setInterval(function(){
-    self.render()
-  }, this.refreshRate)
+    self.updateBoard()
+  }, 66)
 
   this.startGame()
 
@@ -94,24 +129,24 @@ Board.prototype.startGame = function(){
   return self.game
 }
 
-Board.prototype.render = function(){
-  // plain 0s and 1s
-  // this.el.innerHTML = this.toString()
-
+Board.prototype.buildGrid = function(){
   var self = this
-  this.el.innerHTML = ""
 
-  this.matrix.forEach(function(value, idx){
+  while (this.gridEl.firstChild) {
+    this.gridEl.removeChild(this.gridEl.firstChild)
+  }
+
+  this.matrix.forEach(function(value, rowIdx){
     
     var row = document.createElement('div')
     row.classList.add('row')
-
-    self.matrix[idx].forEach(function(value, idx){
+    self.matrix[rowIdx].forEach(function(value, colIdx){
 
       var cell = document.createElement('span')
-      cell.className = 'cell'
+      cell.className = 'cell '+rowIdx+'_'+colIdx
       if (value > 0) {
         cell.classList.add("filled")
+        self.activeBoxes.push(cell)
       }
 
       cell.innerHTML = "&nbsp;"
@@ -120,7 +155,38 @@ Board.prototype.render = function(){
 
     })
 
-    self.el.appendChild(row)
+    self.gridEl.appendChild(row)
+
+  })
+}
+
+Board.prototype.updateBoard = function(){
+  // plain 0s and 1s
+  // this.el.innerHTML = this.toString()
+
+  var self = this
+
+  // remove any existing filled boxes
+
+  while (self.activeCells.length > 0) {
+    var oldCell = self.activeCells.pop()
+    oldCell.classList.remove("filled")
+  }
+
+  this.matrix.forEach(function(value, rowIdx){
+    self.matrix[rowIdx].forEach(function(value, colIdx){
+
+      if (value > 0) {
+        // debugger
+        var activeCell = document.getElementsByClassName('cell '+rowIdx+'_'+colIdx)[0]
+        // debugger
+        if (activeCell !== undefined) { 
+          activeCell.classList.add("filled")
+          self.activeCells.push(activeCell)
+        }
+      }
+
+    })
 
   })
 }
@@ -146,14 +212,35 @@ Board.prototype.reset = function(){
   })
 }
 
+Board.prototype.actions = function(ev){
+  var direction = ev.keyIdentifier
+  // console.log("key", keyName, ev)
+  switch( direction ) {
+    case "Up":
+      // . key
+      // rotate right
+      ev.preventDefault()
+      this.currentRotationIndex += 1
+      this.renderShape(this.currentShape.name, this.currentRotationIndex)
+      break
+    // case 188:
+    //   // , key
+    //   // rotate left
+    //   ev.preventDefault()
+    //   // TODO: fix this, doesn't seem to work
+    //   this.currentRotationIndex -= 1
+    //   // quick fix
+    //   if (this.currentRotationIndex < 0 ) this.currentRotationIndex = Math.abs(this.currentRotationIndex) 
+    //   this.renderShape(this.currentShape.name, this.currentRotationIndex)
+    //   break
+  } 
+  return false
+}
+
 Board.prototype.move = function(ev){
   
   var direction = ev.keyIdentifier
   switch ( direction ) {
-    case "Up":
-      ev.preventDefault()
-      var newPosition = { y: this.currentPosition.y-1, x: this.currentPosition.x }
-      break
     case "Down":
       ev.preventDefault()
       var newPosition = { y: this.currentPosition.y+1, x: this.currentPosition.x }
@@ -166,28 +253,13 @@ Board.prototype.move = function(ev){
       ev.preventDefault()
       var newPosition = { y: this.currentPosition.y, x: this.currentPosition.x+1 }
       break
-    case "Meta":
-      ev.preventDefault()
-      // console.log("rotate right!")
-      this.currentRotationIndex += 1
-      this.renderShape(this.currentShape.name, this.currentRotationIndex)
-      break
-    case "Alt":
-      ev.preventDefault()
-      // TODO: fix this, doesn't seem to work
-      // console.log("rotate left!")
-      this.currentRotationIndex -= 1
-      // quick fix
-      if (this.currentRotationIndex < 0 ) this.currentRotationIndex = Math.abs(this.currentRotationIndex) 
-      this.renderShape(this.currentShape.name, this.currentRotationIndex)
-      break
-    default:
       // console.log("no movement", ev)
   }
 
   // TODO: figure out way preview future positions without doing this
   if (newPosition && this.isValidPosition({}, this.currentShape.previewMove(this, newPosition) )) {
     this.changeCurrentPostion(newPosition)
+    this.updateBoard()
   }
   // this.setCurrentPostion()
   return false
@@ -202,12 +274,11 @@ Board.prototype.changeCurrentPostion = function(newPosition){
     this.matrix[this.currentPosition.y][this.currentPosition.x] = 0
     this.currentPosition = newPosition
     this.matrix[newPosition.y][newPosition.x] = 1
-  } else {
-    this.matrix[this.currentPosition.y][this.currentPosition.x] = 1
-  }
+    self.renderShape()
+  } 
 
 
-  self.renderShape()
+  
 
 }
 
@@ -258,19 +329,34 @@ Board.prototype.stampShape = function(){
 
 }
 
+// Board EVENTS
+
 Board.prototype.bindEvents = function(){
 
   var self = this;
 
   // set keybindings
-  document.onkeydown = this.move.bind(self)
+  document.addEventListener("keydown", this.move.bind(self) )
+
+  document.addEventListener("keyup", this.actions.bind(self) )
 
 }
+
+Board.prototype.stopAllIntervals = function(){
+  this.stopGame()
+  this.stopRefresh()
+}
+
 
 Board.prototype.isValidPosition = function(newPosition, positionsArray){
   var self = this
   if (!positionsArray) {
-    return newPosition.y < this.height && newPosition.y >= 0 && newPosition.x < this.width && newPosition.x >= 0
+            //validates that new position is within board 
+    return newPosition.y < this.height &&
+           newPosition.y >= 0 && 
+           newPosition.x < this.width && 
+           newPosition.x >= 0 &&
+           this.matrix[newPosition.y][newPosition.x] !== 3
   } else {
     // debugger 
     var result = true
