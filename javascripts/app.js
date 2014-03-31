@@ -24,7 +24,7 @@ $(function(){
       var $midCell = $('.cell.10_10')
       // debugger
       $midCell.css("color", "white")
-      $midCell.text("hello")
+      $midCell.text("test text")
     }
   })
 
