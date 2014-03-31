@@ -5,9 +5,15 @@ Licensed under the BSD License.
 http://yuilibrary.com/license/
 */
 
+@font-face {
+  font-family: PressStart;
+  src: url(../fonts/PressStart2P.ttf);
+}
+
 html{color:#000;background:#FFF}body,div,dl,dt,dd,ul,ol,li,h1,h2,h3,h4,h5,h6,pre,code,form,fieldset,legend,input,textarea,p,blockquote,th,td{margin:0;padding:0}table{border-collapse:collapse;border-spacing:0}fieldset,img{border:0}address,caption,cite,code,dfn,em,strong,th,var{font-style:normal;font-weight:normal}ol,ul{list-style:none}caption,th{text-align:left}h1,h2,h3,h4,h5,h6{font-size:100%;font-weight:normal}q:before,q:after{content:''}abbr,acronym{border:0;font-variant:normal}sup{vertical-align:text-top}sub{vertical-align:text-bottom}input,textarea,select{font-family:inherit;font-size:inherit;font-weight:inherit;*font-size:100%}legend{color:#000}#yui3-css-stamp.cssreset{display:none}
 body {
   background-color: black;
+  font-family: 'PressStart';
 }
 
 .cleared {
@@ -29,6 +35,8 @@ body {
   color: white;
   margin: 2% 0 0 0;
   padding: 0;
+  top: 0;
+  left: 0;
   background-color: none;
 }
 
@@ -36,8 +44,8 @@ body {
   float: right;
   /*display: inline-block;*/
   font-weight: bold;
-  font-family: 'Helvetica';
-  font-size: 3.4em;
+  /*font-family: 'Helvetica';*/
+  font-size: 3.3em;
 }
 
 #main-heading h2 {
@@ -45,8 +53,8 @@ body {
   /*display: inline-block;*/
   font-weight: normal;
   font-style: italic;
-  font-family: 'Helvetica';
-  font-size: 2.0em;
+  /*font-family: 'Helvetica';*/
+  font-size: 1.7em;
 }
 
 #main-container {

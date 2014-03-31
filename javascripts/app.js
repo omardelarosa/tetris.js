@@ -18,7 +18,15 @@ $(function(){
 
   Backbone.history.start()
 
-  window.b = new Board()
+  window.b = new Board({
+    afterInit: function(board){
+      console.log(board, "loaded callback!")
+      var $midCell = $('.cell.10_10')
+      // debugger
+      $midCell.css("color", "white")
+      $midCell.text("hello")
+    }
+  })
 
   // test
 
@@ -29,9 +37,11 @@ $(function(){
   // b.matrix[20][5] = 3
   // b.matrix[20][6] = 3
 
-  b.matrix[20].forEach(function(col, colIdx){
+  
+
+  b.matrix[10].forEach(function(col, colIdx){
     // if (col !== 10 || col !== 11 || col !== 12) { 
-      b.matrix[20][colIdx] = 3
+      b.matrix[Math.floor(b.height/2)][colIdx] = 3
     // }
   })
 

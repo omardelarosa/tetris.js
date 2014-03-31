@@ -4,21 +4,25 @@ var Board = function(options) {
   var options = options || {}
   var self = this
 
+  if (options.beforeInit) options.beforeInit(self)
+
   // number of rows and columns (height, width)
 
   this.deviceWidth = window.innerWidth
   this.deviceHeight = window.innerHeight
 
-  this.sliceSize = Math.floor( 200*(80/this.deviceWidth) ) || 1
-  if (this.sliceSize < 18)  { 
-    this.sliceSize = 18 
-  } else if (this.sliceSize > 25) {
-    this.sliceSize = 25
+  this.squareSize = Math.floor( 200*(80/this.deviceWidth) ) || 1
+  if ( /iPhone/.test(navigator.userAgent) ) {
+    this.squareSize = 28
+  } else if (this.squareSize < 18)  { 
+    this.squareSize = 18 
+  } else if (this.squareSize > 25) {
+    this.squareSize = 25
   }
-  // console.log("sliceSize", this.sliceSize)
+  // console.log("squareSize", this.squareSize)
 
-  this.width = options.width || Math.floor(this.deviceWidth/this.sliceSize)
-  this.height = options.height || Math.floor(this.deviceHeight/this.sliceSize)
+  this.width = options.width || Math.floor(this.deviceWidth/this.squareSize)
+  this.height = options.height || Math.floor(this.deviceHeight/this.squareSize)
   this.refreshRate = options.refreshRate || 300
   this.id = options.id || "main-container"
 
@@ -108,10 +112,10 @@ var Board = function(options) {
   // speed improvement over dynamically adding style
   dynamicStyle.innerText = [
     ".row {",
-      "height: ", self.sliceSize, ";",
+      "height: ", self.squareSize, ";",
     "}",
     ".cell {",
-      "width: ", self.sliceSize, ";",
+      "width: ", self.squareSize, ";",
     "}",
     "#main-container {",
       "width: ", self.deviceWidth+"px",
@@ -174,6 +178,8 @@ var Board = function(options) {
   // bind Events
 
   this.bindEvents()
+
+  if (options.afterInit) options.afterInit(self)
 
 }
 
